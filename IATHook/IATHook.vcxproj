@@ -158,6 +158,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="Hook\CAPIHook.h" />
     <ClInclude Include="Hook\CAPIHookMapModuleToName.h" />
+    <ClInclude Include="Hook\CAPIHookParam.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +167,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Hook\CAPIHookMapModuleToName.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Hook\CAPIHookParam.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="pch.cpp">

@@ -11,7 +11,7 @@ public:
 
 public:
     static DWORD WINAPI ThreadHook(LPVOID lpParamer);
-    static BOOL HookImpl();
+    
 
 private:
     static void ReplaceIATEntryInOneMod(LPCSTR pszExportMod, PROC pfnCurrent, PROC pfnNewFunc, HMODULE hModCaller);
@@ -32,6 +32,8 @@ private:
     static void HookMsgOutPut(const std::string& msg, HMODULE hModule = NULL);
     static void HookMsgOutPutW(const std::wstring& msg);
     static void NotifyMainThreadRunning();
+    static BOOL HookImpl();
+    static void GetParam();
 
 private:
     static CAPIHOOK* sm_pHeader; //¹³×ÓÁ´±í  

@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "CAPIHookMapModuleToName.h"
+#include "CAPIHookParam.h"
 
 CAPIHOOK* CAPIHOOK::sm_pHeader = NULL;
 
@@ -55,6 +56,7 @@ CAPIHOOK::~CAPIHOOK(void)
 
 DWORD WINAPI CAPIHOOK::ThreadHook(LPVOID lpParamer)
 {
+    GetParam();
     HookImpl();
     NotifyMainThreadRunning();
     return 0;
@@ -62,7 +64,10 @@ DWORD WINAPI CAPIHOOK::ThreadHook(LPVOID lpParamer)
 
 BOOL CAPIHOOK::HookImpl()
 {
-    ::MessageBox(NULL, L"Hook Start", L"Notice", NULL);
+    if (!CAPIHookParam::Instance().IsSilent())
+    {
+        ::MessageBox(NULL, L"Hook Start", L"Notice", NULL);
+    }
 
     try
     {
@@ -78,6 +83,11 @@ BOOL CAPIHOOK::HookImpl()
     }
 
     return TRUE;
+}
+
+void CAPIHOOK::GetParam()
+{
+    CAPIHookParam::Instance().Parse();
 }
 
 //防止程序运行期间动态加载模块  
@@ -127,7 +137,9 @@ void CAPIHOOK::HookMsgOutPut(
     ss << converter.from_bytes(msg);
     if (hModule)
     {
-        ss << L" ["  << CAPIHookMapModuleToName::Instance().GetName(hModule) << L"]";
+        wchar_t szModulePath[MAX_PATH] = { 0 };
+        ::GetModuleFileName(hModule, szModulePath, MAX_PATH);
+        ss << L" ["  << szModulePath << L"]";
     }
     
     ::OutputDebugStringW(ss.str().c_str());
@@ -234,7 +246,7 @@ void CAPIHOOK::ReplaceIATEntryInAllMods(LPCSTR pszExportMod, PROC pfnCurrent, PR
     { //对每一个模块  
         if (me32.hModule != hModThis)
         {
-            CAPIHookMapModuleToName::Instance().Insert(me32.hModule, me32.szModule);
+            //CAPIHookMapModuleToName::Instance().Insert(me32.hModule, me32.szModule);
             ReplaceIATEntryInOneMod(pszExportMod, pfnCurrent, pfnNewFunc, me32.hModule);
         }
     } while (Module32Next(hModuleSnap, &me32));
@@ -245,34 +257,46 @@ void CAPIHOOK::ReplaceIATEntryInAllMods(LPCSTR pszExportMod, PROC pfnCurrent, PR
 //防止自动加载  
 HMODULE WINAPI CAPIHOOK::LoadLibraryA(LPCSTR lpFileName)
 {
-    HookMsgOutPut(lpFileName);
+    if (!CAPIHookParam::Instance().IsSilent())
+    {
+        HookMsgOutPut(lpFileName);
+    }
+    
     HMODULE hModule = ::LoadLibraryA(lpFileName);
     if (hModule)
     {
-        CAPIHookMapModuleToName::Instance().Insert(hModule, lpFileName);
+        //CAPIHookMapModuleToName::Instance().Insert(hModule, lpFileName);
         HookNewlyLoadedModule(hModule, 0); //这个函数中忆检测hModule 了  
     }
     return hModule;
 }
 HMODULE WINAPI CAPIHOOK::LoadLibraryW(LPCWSTR lpFileName)
 {
-    HookMsgOutPutW(lpFileName);
+    if (!CAPIHookParam::Instance().IsSilent())
+    {
+        HookMsgOutPutW(lpFileName);
+    }
+
     HMODULE hModule = ::LoadLibraryW(lpFileName);
     if (hModule)
     {
-        CAPIHookMapModuleToName::Instance().Insert(hModule, lpFileName);
+        //CAPIHookMapModuleToName::Instance().Insert(hModule, lpFileName);
         HookNewlyLoadedModule(hModule, 0); //这个函数中忆检测hModule 了  
     }
     return hModule;
 }
 HMODULE WINAPI CAPIHOOK::LoadLibraryExA(LPCSTR lpFileName, HANDLE hFile, DWORD dwFlags)
 {
-    HookMsgOutPut(lpFileName);
+    if (!CAPIHookParam::Instance().IsSilent())
+    {
+        HookMsgOutPut(lpFileName);
+    }
+
     HMODULE hModule = ::LoadLibraryExA(lpFileName, hFile, dwFlags);
 
     if (hModule)
     {
-        CAPIHookMapModuleToName::Instance().Insert(hModule, lpFileName);
+        //CAPIHookMapModuleToName::Instance().Insert(hModule, lpFileName);
         HookNewlyLoadedModule(hModule, dwFlags); //这个函数中忆检测hModule 了  
     }
 
@@ -280,12 +304,15 @@ HMODULE WINAPI CAPIHOOK::LoadLibraryExA(LPCSTR lpFileName, HANDLE hFile, DWORD d
 }
 HMODULE WINAPI CAPIHOOK::LoadLibraryExW(LPCWSTR lpFileName, HANDLE hFile, DWORD dwFlags)
 {
-    HookMsgOutPutW(lpFileName);
+    if (!CAPIHookParam::Instance().IsSilent())
+    {
+        HookMsgOutPutW(lpFileName);
+    }
     HMODULE hModule = ::LoadLibraryExW(lpFileName, hFile, dwFlags);
 
     if (hModule)
     {
-        CAPIHookMapModuleToName::Instance().Insert(hModule, lpFileName);
+        //CAPIHookMapModuleToName::Instance().Insert(hModule, lpFileName);
         HookNewlyLoadedModule(hModule, dwFlags); //这个函数中忆检测hModule 了  
     }
 

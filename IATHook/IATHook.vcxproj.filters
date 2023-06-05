@@ -33,6 +33,9 @@
     <ClInclude Include="Hook\CAPIHookMapModuleToName.h">
       <Filter>Import\Hook</Filter>
     </ClInclude>
+    <ClInclude Include="Hook\CAPIHookParam.h">
+      <Filter>Import\Hook</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -45,6 +48,9 @@
       <Filter>Import\Hook</Filter>
     </ClCompile>
     <ClCompile Include="Hook\CAPIHookMapModuleToName.cpp">
+      <Filter>Import\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\CAPIHookParam.cpp">
       <Filter>Import\Hook</Filter>
     </ClCompile>
   </ItemGroup>

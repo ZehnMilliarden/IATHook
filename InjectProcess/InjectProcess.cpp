@@ -34,14 +34,15 @@ bool AdjustPrivilege()
 
 void InjectDllToProc(
     const std::string& proc, 
-    const std::string& dll)
+    const std::string& dll,
+    const std::string& param)
 {
 
     STARTUPINFOA si = { sizeof(si) };
     PROCESS_INFORMATION pi;
     if (!::CreateProcessA(
         proc.c_str(), 
-        NULL, 
+        (LPSTR)param.c_str(),
         NULL, 
         NULL, 
         FALSE, 
@@ -121,6 +122,7 @@ int main(int argc, char* argv[])
     cmdline::parser param;
     param.add<std::string>("proc", 'p', "Process Path", true);
     param.add<std::string>("dll", 'd', "Dynamic Link Library Path", true);
+    param.add("silent", 's', "Hook Silent");
 
     bool bOk = param.parse(argc, argv);
     if (!bOk)
@@ -133,7 +135,14 @@ int main(int argc, char* argv[])
     std::string dll  = param.get<std::string>("dll");
 
     AdjustPrivilege();
-    InjectDllToProc(proc, dll);
+
+    std::string str_sub_params;
+    if (param.exist("silent"))
+    {
+        str_sub_params.append(" --silent");
+    }
+
+    InjectDllToProc(proc, dll, str_sub_params);
 
     return 0;
 }
