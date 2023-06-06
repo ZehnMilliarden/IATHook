@@ -108,8 +108,18 @@ void CAPIHOOK::HookNewlyLoadedModule(HMODULE hModule, DWORD dwFlags)
 //防止程序运行期间动态调用API函数  
 FARPROC WINAPI CAPIHOOK::GetProcess(HMODULE hModule, PCSTR pszProcName)
 {
+    BOOL isOrdinal = HIWORD(pszProcName) == 0;
     //得到函数的真实地址
-    HookMsgOutPut(pszProcName, hModule);
+    if (!isOrdinal)
+    {
+        HookMsgOutPut(pszProcName, hModule);
+    }
+    else
+    {
+        std::stringstream ss_func_name;
+        ss_func_name << "#Function Ordinal " << HIWORD(pszProcName);
+        HookMsgOutPut(ss_func_name.str(), hModule);
+    }
 
     FARPROC pfn = ::GetProcAddress(hModule, pszProcName);
     //遍历列表 看是不是要HOOK的函数  
@@ -193,24 +203,22 @@ void CAPIHOOK::ReplaceIATEntryInOneMod(LPCSTR pszExportMod, PROC pfnCurrent, PRO
             //取得函数名称  
             IMAGE_IMPORT_BY_NAME* pImportByName = (IMAGE_IMPORT_BY_NAME*)((BYTE*)hModCaller + pThunk->u1.AddressOfData);
             char* pszFuncName = (char*)pImportByName->Name; //函数名在结构体的Name字段中  
-            //printf("function name:%-25s,  ", pszFuncName);  
             //取得函数地址  
-            PDWORD lpAddr = (DWORD*)((BYTE*)hModCaller + pImportDesc->FirstThunk) + n; //从第一个函数的地址，以后每次+4字节  
-            //printf("addrss:%X\n", lpAddr);  
+            PDWORD_PTR lpAddr = (DWORD_PTR*)((BYTE*)hModCaller + pImportDesc->FirstThunk) + n; //从第一个函数的地址，以后每次+8字节  
             //在这里是比较的函数地址  
-            if (*lpAddr == (DWORD)pfnCurrent)  //找到iat中的函数地址  
+            if (*lpAddr == (DWORD_PTR)pfnCurrent)  //找到iat中的函数地址  
             {
-                DWORD dwNewProc = (DWORD)pfnNewFunc;
+                DWORD_PTR dwNewProc = (DWORD_PTR)pfnNewFunc;
                 MEMORY_BASIC_INFORMATION mbi;
                 DWORD dwOldProtect;
                 //修改内存页的保护属性  
                 ::VirtualQuery(lpAddr, &mbi, sizeof(MEMORY_BASIC_INFORMATION));
-                ::VirtualProtect(lpAddr, sizeof(DWORD), PAGE_READWRITE, &dwOldProtect);
-                ::WriteProcessMemory(GetCurrentProcess(), lpAddr, &dwNewProc, sizeof(DWORD), NULL);
-                ::VirtualProtect(lpAddr, sizeof(DWORD), dwOldProtect, NULL);
+                ::VirtualProtect(lpAddr, sizeof(DWORD_PTR), PAGE_READWRITE, &dwOldProtect);
+                ::WriteProcessMemory(GetCurrentProcess(), lpAddr, &dwNewProc, sizeof(DWORD_PTR), NULL);
+                ::VirtualProtect(lpAddr, sizeof(DWORD_PTR), dwOldProtect, NULL);
                 return;
             }
-            n++; //每次增加一个DWORD  
+            n++; //每次增加一个DWORD_PTR  
             pThunk++; //指向下一个IMAGE_THUNK_DATA结构体  
         }
     }
